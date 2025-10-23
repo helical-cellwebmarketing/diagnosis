@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Googleレビュアー14タイプ診断</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      min-height: 100vh;
+      font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+    }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .screen { display: none; animation: fadeIn 0.5s ease-in; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .title {
+      font-size: 2.5rem; font-weight: bold;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 20px; line-height: 1.2;
+    }
+    .star-button {
+      display: inline-block; margin: 10px; padding: 20px 30px; border-radius: 50px; border: none;
+      font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .star-button:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); }
+    .star-5 { background: linear-gradient(45deg, #FFD700, #FFA500); color: #fff; }
+    .star-4 { background: linear-gradient(45deg, #4A90E2, #87CEEB); color: #fff; }
+    .star-3 { background: linear-gradient(45deg, #5CB85C, #90EE90); color: #fff; }
+    .star-2 { background: linear-gradient(45deg, #FF8C00, #FFD700); color: #fff; }
+    .star-1 { background: linear-gradient(45deg, #DC3545, #8B0000); color: #fff; }
+    .start-button {
+      background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 20px 40px; border: none;
+      border-radius: 50px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .start-button:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2); }
+    .loading { display: flex; justify-content: center; align-items: center; height: 200px; }
+    .spinner {
+      width: 60px; height: 60px; border: 6px solid #f3f3f3; border-top: 6px solid #667eea;
+      border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .character-img { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; margin: 0 auto 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); }
+    .result-card {
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); text-align: center; margin-bottom: 20px;
+    }
+    .share-button { display: inline-block; margin: 10px; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: all 0.3s ease; }
+    .twitter-share { background: #1DA1F2; color: white; }
+    .line-share { background: #00C300; color: white; }
+    .action-button {
+      background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 15px 30px; border: none; border-radius: 50px;
+      font-size: 1rem; font-weight: bold; cursor: pointer; margin: 10px; transition: all 0.3s ease;
+    }
+    .action-button:hover { transform: translateY(-2px); }
+    @media (max-width: 768px) {
+      .title { font-size: 2rem; } .container { padding: 10px; } .card, .result-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+      <div class="card">
+        <h1 class="title">Googleレビュアー14タイプ診断</h1>
+        <h2 class="text-xl mb-4">あなたは何タイプ？たった2つの質問で分かる！</h2>
+        <p class="mb-8 text-gray-700">108名の実データから導き出された14の性格タイプ。あなたのレビュー傾向を診断します</p>
+        <button class="start-button" onclick="startQuiz()"><i class="fas fa-play mr-2"></i>診断スタート</button>
+      </div>
+    </div>
+
+    <!-- Question 1 Screen -->
+    <div id="question1-screen" class="screen">
+      <div class="card">
+        <h2 class="text-2xl mb-6 font-bold">質問 1/2</h2>
+        <h3 class="text-xl mb-8">あなたが最も多く投稿する☆の数は？</h3>
+        <div class="flex flex-wrap justify-center">
+          <button class="star-button star-5" onclick="selectFirst(5)"><i class="fas fa-star mr-2"></i>☆5</button>
+          <button class="star-button star-4" onclick="selectFirst(4)"><i class="fas fa-star mr-2"></i>☆4</button>
+          <button class="star-button star-3" onclick="selectFirst(3)"><i class="fas fa-star mr-2"></i>☆3</button>
+          <button class="star-button star-2" onclick="selectFirst(2)"><i class="fas fa-star mr-2"></i>☆2</button>
+          <button class="star-button star-1" onclick="selectFirst(1)"><i class="fas fa-star mr-2"></i>☆1</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question 2 Screen -->
+    <div id="question2-screen" class="screen">
+      <div class="card">
+        <h2 class="text-2xl mb-6 font-bold">質問 2/2</h2>
+        <h3 class="text-xl mb-8">あなたが2番目に多く投稿する☆の数は？</h3>
+        <div id="second-options" class="flex flex-wrap justify-center"></div>
+      </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen">
+      <div class="card">
+        <div class="loading"><div class="spinner"></div></div>
+        <h3 class="text-xl mt-4">あなたのタイプを診断中...</h3>
+        <p class="text-gray-600 mt-2">108名のデータと照合しています</p>
+      </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="screen">
+      <div class="result-card">
+        <img id="character-img" class="character-img" src="" alt="キャラクター">
+        <h2 id="character-name" class="text-3xl font-bold mb-2"></h2>
+        <p id="pattern" class="text-lg mb-2"></p>
+        <p id="probability" class="text-sm text-gray-600 mb-4"></p>
+        <p id="description" class="text-base mb-4 leading-relaxed"></p>
+        <div class="bg-yellow-100 p-4 rounded-lg mb-4">
+          <h4 class="font-bold mb-2">💬 口ぐせ</h4>
+          <p id="catchphrase" class="italic"></p>
+        </div>
+        <div class="bg-blue-100 p-4 rounded-lg mb-6">
+          <h4 class="font-bold mb-2">🏪 店舗側が気を付けるポイント</h4>
+          <p id="advice" class="text-sm"></p>
+        </div>
+        <div class="mb-6">
+          <a id="twitter-share" href="#" target="_blank" class="share-button twitter-share"><i class="fab fa-twitter mr-2"></i>Twitterでシェア</a>
+          <a id="line-share" href="#" target="_blank" class="share-button line-share"><i class="fab fa-line mr-2"></i>LINEでシェア</a>
+        </div>
+        <div>
+          <button class="action-button" onclick="restartQuiz()"><i class="fas fa-redo mr-2"></i>もう一度診断する</button>
+          <a href="https://xvemnqjf.gensparkspace.com/" target="_blank" class="action-button"><i class="fas fa-book mr-2"></i>全14タイプ図鑑を見る</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const characterData = {
+      "5-4":{"name":"ゴールドパートナー","pattern":"☆5→☆4","probability":"38.0% (最多タイプ)","description":"基本的には最高評価を連発するポジティブタイプ。でも「完璧」を知っているからこそ、細かい部分で☆4をつける目が肥えた審査員。期待値が高いぶん、2番目の評価も厳しめになりがち。","catchphrase":"「いいお店なんだけどね、あと一歩なんだよなぁ」","advice":"このタイプは「ほぼ完璧」を求める常連客予備軍。細部へのこだわり（清潔感、接客の丁寧さ、料理の温度など）を徹底すれば、最強の味方に。☆4の理由を真摯に受け止めて改善すると、熱烈なファンになってくれる。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/d183f0bf-90ac-4cd0-846a-044905562801.png"},
+      "4-5":{"name":"プラチナハンター","pattern":"☆4→☆5","probability":"15.7%","description":"普段は「まぁ良かった」程度の☆4評価。でも本当に感動した時だけ☆5を出す、感情にブレーキをかけるタイプ。冷静で客観的な視点を持ち、滅多に最高評価をつけないからこそ、☆5の価値が重い。","catchphrase":"「期待しすぎるとガッカリするからね」","advice":"このタイプから☆5をもらうには「期待を超える体験」が必須。特別なサービス、サプライズ、予想外の感動が鍵。一度☆5をもらえたら、その口コミは信頼性抜群で集客効果大。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/ba1341d5-1691-479a-a2c4-e7caf65ad21f.png"},
+      "4-3":{"name":"ジャッジ","pattern":"☆4→☆3","probability":"13.9%","description":"「☆5は滅多にない」と考える現実派。ほとんどのお店を☆4か☆3で評価する、中間層の代表格。極端な評価を避け、公平な視点を大切にする良識派レビュアー。","catchphrase":"「普通が一番だよ、普通が」","advice":"安定したサービス品質が最重要。このタイプは「期待通り」で満足するため、看板に偽りなく、約束を守ることが信頼につながる。☆3でも悪い評価ではないので過度に気にしすぎない。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/2ab9efa2-951c-4395-a1a1-226497854db3.png"},
+      "5-1":{"name":"ジキルハイド","pattern":"☆5→☆1","probability":"11.1% (要注意)","description":"感情の振れ幅が激しい、オールオアナッシング型。良い体験には惜しみなく☆5、少しでも不快な思いをすると容赦なく☆1。中間がない極端派で、店舗にとっては諸刃の剣。","catchphrase":"「最高か最悪か、それだけ」","advice":"【最重要注意タイプ】小さなミスが致命傷に。接客態度、待ち時間、清潔感など基本的な部分で絶対に失敗しないこと。一度☆1をつけられると激しい批判口コミになる可能性大。逆に感動させれば最高の広告塔に。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/0f9e554c-e33f-411d-9646-d01e80d38e1b.png"},
+      "5-3":{"name":"ムードウェーブ","pattern":"☆5→☆3","probability":"4.6%","description":"基本はポジティブだけど、その日の気分やコンディションで評価が変わるタイプ。同じお店でも「今日は☆5！」「今回は☆3かな」と揺らぐ。感性重視で、雰囲気や感情に左右されやすい。","catchphrase":"「その時の感じでね〜」","advice":"一貫した体験の提供が鍵。時間帯やスタッフによってサービスの質にムラがあると評価が下がる。「いつ来ても同じクオリティ」を保つことで、☆5を安定してもらえる。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/2124e3ef-4bd3-4df4-8d79-b66457b6bbd7.png"},
+      "1-5":{"name":"ダークホース","pattern":"☆1→☆5","probability":"3.7%","description":"普段は厳しい目で☆1を連発するクレーマー気質。でも本当に良いものには心を開き、☆5をつける素直な一面も。不満を持ちやすいが、それを乗り越えた感動には弱い。","catchphrase":"「まぁ、これは認めるよ」","advice":"クレーム対応が試される相手。初期の不満を真摯に受け止め、誠実に対応すれば評価が180度変わる可能性。☆1をもらった後のリカバリーが評判を左右する。逆に放置すると炎上リスク大。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/64cd3c13-aa36-4675-9628-ec77b0b53789.png"},
+      "4-2":{"name":"パーフェクトシーカー","pattern":"☆4→☆2","probability":"2.8%","description":"基本は「まあまあ」の☆4だけど、些細な欠点を見つけると容赦なく☆2まで下げる辛口タイプ。完璧を100点として、マイナスポイントを積み重ねていく減点方式の評価者。","catchphrase":"「惜しい！あれさえなければねぇ」","advice":"小さな欠点が命取り。トイレの清潔さ、スタッフの言葉遣い、提供スピードなど、細部のミスを見逃さない。チェックリストを作って品質管理を徹底することが重要。欠点を潰していけば高評価につながる。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/3a0f1479-9fe2-48d4-a864-19510c34341f.png"},
+      "3-4":{"name":"スロースターター","pattern":"☆3→☆4","probability":"2.8%","description":"初訪問は☆3でスタート。リピートして良さを発見すると☆4に上げていく、段階的評価タイプ。一発では判断せず、何度か通って総合的に判断する慎重派。","catchphrase":"「まずは様子見だね」","advice":"初回の印象は「普通」でも、リピート時の一貫性と改善姿勢が評価される。2回目以降の来店で「進化している」と感じさせることが☆4への昇格の鍵。常連客を大切にする姿勢が効果的。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/b0a647b6-64e1-44a1-b140-e16e5d348394.png"},
+      "2-5":{"name":"トレジャーハンター","pattern":"☆2→☆5","probability":"1.9%","description":"最初は「うーん」と☆2をつけがち。でも隠れた魅力や意外な良さを発見すると、一気に☆5まで評価が急上昇する振れ幅の大きいタイプ。第一印象より中身を重視する玄人好み。","catchphrase":"「見た目で判断しちゃダメだね」","advice":"第一印象よりも「本質的な価値」で勝負。料理の味、スタッフの人柄、隠れたこだわりなど、気づいてもらえる工夫を。SNS映えより実質重視。説明やPOPで「こだわり」を伝えると◎。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/9ff86e20-ebca-4c3a-bde3-f4b0a85cbd5c.png"},
+      "1-2":{"name":"デストロイヤー","pattern":"☆1→☆2","probability":"1.9% (難易度MAX)","description":"基本的に何でも気に入らない、常に不満を抱えているタイプ。最低評価の☆1と、「まあ最悪じゃない」という☆2を行き来する。満足させるのは至難の業。","catchphrase":"「どこもかしこもダメだね」","advice":"【難易度MAX】このタイプを満足させるのは非常に困難。むしろ低評価を前提に、他の顧客への誠実な対応を見せることで第三者の評価を得る戦略が有効。クレームへの冷静な対応力が試される。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/0f5fe590-3fca-41df-8f3f-031cb627f5ff.png"},
+      "4-1":{"name":"トラストブレイカー","pattern":"☆4→☆1","probability":"0.9% (超レア)","description":"普段は☆4で満足する好意的なタイプ。でも一度でも期待を裏切られると、☆1まで急降下する。信頼関係を重視し、裏切り行為に敏感。","catchphrase":"「期待してたのに、裏切られた…」","advice":"【信頼管理型】広告や前回の体験と一貫性を保つことが最重要。「写真と実物が違う」「前回より質が落ちた」は厳禁。常に同じクオリティを維持し、約束を守ることで信頼を築く。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/dd3ff37f-b08d-4f39-8e2d-149573b31088.png"},
+      "2-4":{"name":"グロウアー","pattern":"☆2→☆4","probability":"0.9% (超レア)","description":"控えめに☆2からスタートし、良い点を見つけて☆4まで上げていく穏健派。悪い点より良い点を探そうとするポジティブ思考の持ち主。","catchphrase":"「よく見ると、いいところあるね」","advice":"改善の努力が評価される。初回の欠点を素直に受け止め、改善している姿勢を見せれば評価が上がる。小さな改善の積み重ねをSNSで発信すると、このタイプの心に響く。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/b07a41d3-bed4-47b1-a422-e47f913d063a.png"},
+      "5-2":{"name":"ドリームクラッシャー","pattern":"☆5→☆2","probability":"0.9% (超レア)","description":"最高の期待を持って☆5を狙うが、少しでも理想と違うと一気に☆2まで落とす落差激しいタイプ。「こうあるべき」という強い理想像を持つ完璧主義者。","catchphrase":"「期待してたのと違う…」","advice":"事前期待のコントロールが最重要。過剰な宣伝や誇大表現は逆効果。「このお店はこういう感じです」と正直に伝え、ギャップを生まない工夫を。メニュー写真や説明文は現実に即した表現にすることで、理想と現実のズレを防ぐ。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/50452c11-8f85-40c5-a70b-b059f210c619.png"},
+      "2-1":{"name":"ダークスパイラル","pattern":"☆2→☆1","probability":"0.9% (超レア)","description":"既に不満がある状態から、さらに悪い体験をして☆1に転落させる、負のスパイラルタイプ。一度ネガティブな印象を持つと、その後の体験も悪い方向に解釈しがち。","catchphrase":"「前も悪かったけど、今回はもっと酷い」","advice":"【リカバリーのラストチャンス】☆2の段階で既に不満がある状態。この時点でのリカバリーが最後のチャンス。クレーム対応を迅速かつ誠実に行い、「改善しようとしている」姿勢を見せることで☆1への転落を防ぐ。一度☆1になると修復困難。","image":"https://cdn1.genspark.ai/user-upload-image/gemini_generated/7338f73d-27b7-4776-a869-6b91ade3ff27.png"}
+    };
+
+    let firstChoice = null;
+    let secondChoice = null;
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+    function startQuiz() { showScreen('question1-screen'); }
+    function selectFirst(value) {
+      firstChoice = value;
+      generateSecondOptions();
+      showScreen('question2-screen');
+    }
+    function generateSecondOptions() {
+      const container = document.getElementById('second-options');
+      container.innerHTML = '';
+      const options = [5,4,3,2,1].filter(n => n !== firstChoice);
+      const starClasses = {5:'star-5',4:'star-4',3:'star-3',2:'star-2',1:'star-1'};
+      options.forEach(num => {
+        const btn = document.createElement('button');
+        btn.className = `star-button ${starClasses[num]}`;
+        btn.innerHTML = `<i class="fas fa-star mr-2"></i>☆${num}`;
+        btn.onclick = () => selectSecond(num);
+        container.appendChild(btn);
+      });
+    }
+    function selectSecond(value) { secondChoice = value; showLoading(); }
+    function showLoading() { showScreen('loading-screen'); setTimeout(showResult, 1200); }
+    function showResult() {
+      const key = `${firstChoice}-${secondChoice}`;
+      const c = characterData[key];
+      if (c) {
+        document.getElementById('character-img').src = c.image;
+        document.getElementById('character-name').textContent = c.name;
+        document.getElementById('pattern').textContent = c.pattern;
+        document.getElementById('probability').textContent = c.probability;
+        document.getElementById('description').textContent = c.description;
+        document.getElementById('catchphrase').textContent = c.catchphrase;
+        document.getElementById('advice').textContent = c.advice;
+        const twText = `私は${c.name}タイプでした！(${c.probability}) %23Googleレビュアー診断`;
+        document.getElementById('twitter-share').href =
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(twText)}&url=${encodeURIComponent(location.href)}`;
+        const lnText = `私は${c.name}タイプでした！\n${c.pattern} (${c.probability})\n\nGoogleレビュアー14タイプ診断`;
+        document.getElementById('line-share').href =
+          `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(location.href)}&text=${encodeURIComponent(lnText)}`;
+        localStorage.setItem('reviewerType', JSON.stringify(c));
+      }
+      showScreen('result-screen');
+    }
+    function restartQuiz() { firstChoice = null; secondChoice = null; showScreen('start-screen'); }
+
+    window.onload = function() {
+      const saved = localStorage.getItem('reviewerType');
+      // ここで「前回の結果を見る」などのUIを出すことも可能（今回は未表示）
+    };
+  </script>
+
+  <!-- Optional: Cloudflare Beacon analytics (remove if not needed) -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+          integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+          data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79"}'
+          crossorigin="anonymous"></script>
+</body>
+</html>
